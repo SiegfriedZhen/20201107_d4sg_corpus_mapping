@@ -80,8 +80,10 @@ def word_cut(file_path, output_file, punc_pkl, text_column, legal_name_file, wor
 
     df = pd.read_csv(file_path)
     punc = pickle.load(open(punc_pkl, 'rb'))
-    word_s = ws(df[text_column], sentence_segmentation=True, segment_delimiter_set=punc)
-    word_s1 = [[_ for _ in w if _ not in punctuation] for w in word_s]
+    word_s = ws(df[text_column],
+                sentence_segmentation=True, segment_delimiter_set=punc, recommend_dictionary=dictionary)
+    # filter and output
+    word_s1 = [[_ for _ in w if _ not in punc] for w in word_s]
     df['token'] = ['@'.join(_) for _ in word_s1]
     df.to_csv(output_file, index=False)
     print(output_file, ' exported.')
