@@ -11,7 +11,7 @@ parsed_column = '缺失內容'
 
 dict_path = root_path / 'dictionary'
 legal_name_file = dict_path / 'name_of_legal.txt'
-word_file = dict_path / 'words.txt'
+word_file = dict_path / 'oth_word.txt'
 punc_file = dict_path / 'punctuation.pkl'
 
 output_path = root_path / 'output'

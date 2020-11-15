@@ -6,6 +6,9 @@ import pickle
 
 
 def recommend_law(text, model_var_file, ckip_path):
+    """
+    Load training result and input string to recommend top 10 laws.
+    """
     def text_preprocess(raw_text):
         ws = WS(ckip_path)
         rule = re.compile(r'[^a-zA-Z0-9\u4e00-\u9fa5]')

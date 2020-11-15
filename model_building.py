@@ -15,7 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 def data_cleansing(df, output_file, text_column):
     """
-    將DataFrame 清洗後輸出 csv。
+    cleansing DataFrame then export csv result.
     """
     # trans columns to chinese
     df.columns = [x.split('\n')[0] for x in df.columns]
