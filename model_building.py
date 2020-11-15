@@ -13,6 +13,48 @@ from ckiptagger import construct_dictionary, WS
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
+def exclude_rule(df, output_file, legal_name_file, split_rule_file):
+    # input some dictionaries
+    # rule_table = pd.read_csv('./dictionary/rule.csv',encoding = 'big5')
+
+    rule_names = []
+    with open(legal_name_file, 'r', encoding='big5') as file :
+        for i in file.readlines():
+            rule_names.append(i.strip())
+
+    add_rule_names = []
+    with open(split_rule_file, 'r', encoding='utf8') as file :
+        for i in file.readlines():
+            add_rule_names.append(i.strip())
+    rule_names.extend(add_rule_names)
+
+    sub_data = df
+    input_re_string_1 = '|'.join(rule_names)
+    sub_data.columns = [i.split('\n')[0] for i in sub_data.columns.tolist()]
+    # re_exp_1 = '(?:{})[^：]*[：|:|略以|載有|規定]「?[^「|」]*[」|。]'.format(input_re_string_1)
+    # 較嚴肅
+    # re_exp_1 = '(?:{})[^：|。|，]*[：|:|，略以|載有|。|規定](?:「[^「|」|]*|[^「|」|。]*)[」|。]'.format(input_re_string_1)
+    # 較寬鬆
+    re_exp_1 = '(?:{})[^：|。|，]*[：|:|，略以|載有|。|規定](?:「[^「|」]*)[」|。]'.format(input_re_string_1)
+    sub_data['法令依據_cloud'] = sub_data['缺失內容'].str.findall(re_exp_1)
+    sub_data['事實&改進建議'] = sub_data['缺失內容'].str.replace(re_exp_1, '')
+
+    input_re_string_2 = '|'.join(rule_names)
+    re_exp_2 = input_re_string_2
+    sub_data['法令_cloud'] = sub_data['缺失內容'].str.findall(re_exp_2)
+
+    news_list = []
+    for i in sub_data['法令_cloud']:
+        if type(i) != list :
+            news_list.append([])
+        else:
+            news_list.append(list(set(i)))
+    sub_data['法令_cloud'] = news_list
+    sub_data['缺失內容'] = sub_data['事實&改進建議']
+    sub_data.to_excel(output_file, index=False)
+    print(output_file, ' exported.')
+
+
 def data_cleansing(df, output_file, text_column):
     """
     cleansing DataFrame then export csv result.
@@ -73,7 +115,7 @@ def get_punctuation(file_path, output_file, text_column):
 
 def word_cut(file_path, output_file, punc_pkl, text_column, legal_name_file, word_file, ckip_path):
     ws = WS(ckip_path)
-    with open(legal_name_file, 'r', encoding='big5') as k1, open(word_file, 'r') as k2:
+    with open(legal_name_file, 'r', encoding='big5') as k1, open(word_file, 'r', encoding='big5') as k2:
         k = k1.read().split('\n') + k2.read().split('\n')
         word_to_weight = dict([(_, 1) for _ in k])
     dictionary = construct_dictionary(word_to_weight)
@@ -91,8 +133,7 @@ def word_cut(file_path, output_file, punc_pkl, text_column, legal_name_file, wor
 
 def word2vec_model(file_path, output_file):
     df = pd.read_csv(file_path)
-    # , 'data_ETL3noPuncDict.csv'
-
+    df = df[df['token'].notna()]
     # Replace '@' with ' ' in original dataframe
     df.token = df.token.apply(lambda text: text.replace('@', ' '))
 

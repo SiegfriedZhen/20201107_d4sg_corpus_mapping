@@ -41,5 +41,5 @@ def split_rule(df, legal_name_file, split_rule_file):
         else:
             news_list.append(list(set(i)))
     sub_data['法令_cloud'] = news_list
-
+    sub_data['缺失內容'] = sub_data['事實&改進建議']
     return sub_data
