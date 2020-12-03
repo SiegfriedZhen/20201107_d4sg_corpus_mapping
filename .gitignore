@@ -9,3 +9,4 @@ ckip_model
 __pycache__
 .DS_Store
 test
+/data/wiki.zh.vector

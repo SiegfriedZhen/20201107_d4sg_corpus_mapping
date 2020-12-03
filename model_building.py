@@ -113,25 +113,41 @@ def get_punctuation(file_path, output_file, text_column):
     print(output_file, ' exported.')
 
 
-def word_cut(file_path, output_file, punc_pkl, text_column, legal_name_file, word_file, ckip_path):
-    ws = WS(ckip_path)
+def create_word_dict(legal_name_file, word_file, output_file):
     with open(legal_name_file, 'r', encoding='big5') as k1, open(word_file, 'r', encoding='big5') as k2:
         k = k1.read().split('\n') + k2.read().split('\n')
         word_to_weight = dict([(_, 1) for _ in k])
     dictionary = construct_dictionary(word_to_weight)
+    pickle.dump(dictionary, open(output_file, 'wb'))
+    print(output_file, ' exported.')
 
+
+def word_cut(file_path, output_file, punc_pkl, word_dict_file, text_column, ckip_path):
+    ws = WS(ckip_path)
     df = pd.read_csv(file_path)
     punc = pickle.load(open(punc_pkl, 'rb'))
-    word_s = ws(df[text_column],
-                sentence_segmentation=True, segment_delimiter_set=punc, recommend_dictionary=dictionary)
+    word_dict = pickle.load(open(word_dict_file, 'rb'))
+    word_s = ws(df[text_column], sentence_segmentation=True,
+                segment_delimiter_set=punc, recommend_dictionary=word_dict)
     # filter and output
-    word_s1 = [[_ for _ in w if _ not in punc] for w in word_s]
+    # word_s1 = [[_ for _ in w if _ not in punc] for w in word_s]
+    rule = re.compile(r'[^a-zA-Z0-9\u4e00-\u9fa5]')
+    word_s1 = [[rule.sub('', w) for w in sent] for sent in word_s]
     df['token'] = ['@'.join(_) for _ in word_s1]
     df.to_csv(output_file, index=False)
     print(output_file, ' exported.')
 
 
-def word2vec_model(file_path, output_file):
+def word2vec_model(file_path, embedding_file, output_file):
+    embeddings = {}
+    # get wiki embedding
+    with open(embedding_file, encoding='utf8') as f:
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings[word] = coefs
+
     df = pd.read_csv(file_path)
     df = df[df['token'].notna()]
     # Replace '@' with ' ' in original dataframe
@@ -146,9 +162,9 @@ def word2vec_model(file_path, output_file):
     # feature name
     tfidf_feature = tfidf_ml.get_feature_names()
 
-    w2v_model = Word2Vec(df.token.apply(lambda text: text.split()))
-    w2v_vocab = list(w2v_model.wv.vocab)
-    print(w2v_model)
+    # w2v_model = Word2Vec(df.token.apply(lambda text: text.split()))
+    # w2v_vocab = list(w2v_model.wv.vocab)
+    # print(w2v_model)
 
     starttime = datetime.datetime.now()
 
@@ -157,11 +173,11 @@ def word2vec_model(file_path, output_file):
     row = 0
 
     for text in df.token.apply(lambda text: text.split()):
-        text_vect = np.zeros(100)
+        text_vect = np.zeros(400)
         weight_sum = 0
         for word in text:
-            if word in w2v_vocab and word in tfidf_feature:
-                vec = w2v_model.wv[word]
+            if word in embeddings.keys() and word in tfidf_feature:
+                vec = embeddings[word]
                 tf_idf = dictionary[word] * (text.count(word) / len(text))
                 text_vect += (vec * tf_idf)
                 weight_sum += tf_idf
@@ -173,6 +189,7 @@ def word2vec_model(file_path, output_file):
     # calculate running time
     endtime = datetime.datetime.now()
     print("建立模型時間: ", endtime - starttime)
-    model_var = [w2v_vocab, w2v_model, tfidf_feature, tfidf_text_vect, dictionary, df]
+    # model_var = [w2v_vocab, w2v_model, tfidf_feature, tfidf_text_vect, dictionary, df]
+    model_var = [embeddings, tfidf_feature, tfidf_text_vect, dictionary, df]
     pickle.dump(model_var, open(output_file, 'wb'))
     print(output_file, ' exported.')
