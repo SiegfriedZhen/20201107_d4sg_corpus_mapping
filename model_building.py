@@ -6,7 +6,7 @@ import pickle
 from string import punctuation
 import datetime
 
-from gensim.models.word2vec import Word2Vec
+# from gensim.models.word2vec import Word2Vec
 import numpy as np
 import pandas as pd
 from ckiptagger import construct_dictionary, WS
