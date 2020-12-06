@@ -26,22 +26,20 @@ step1_file = output_path / 'data_etl_step1_exclude_law.xlsx'  # output as excel 
 step2_file = output_path / 'data_etl_step2.csv'
 step3_file = output_path / 'data_etl_step3_noPuncDict.csv'
 w2v_model_file = output_path / 'w2v_var.pkl'
+rec_file = output_path / 'rec_元智cut.xlsx'
 
-
-# ignore this no dict version
-# output_path / 'data_etl_step2_noPunc.csv'
-
-# # load raw data
-# raw_df = pd.read_excel(root_path / 'data/200801至202008缺失類型(法規分段例).xlsx', sheet_name='法規')
-# # # exclude law
-# exclude_rule(raw_df, step1_file, legal_name_file, split_rule_kw_file)
-# raw_df = pd.read_excel(step1_file)
-# # # preprocessing
-# data_cleansing(raw_df, output_file=step2_file, text_column=parsed_column)
-# get_punctuation(step2_file, output_file=punc_file, text_column=parsed_column)
-# create_word_dict(legal_name_file, word_file, word_dict_pkl_file)
-# word_cut(step2_file, step3_file, punc_file, word_dict_pkl_file, parsed_column, ckip_path)
-# word2vec_model(step3_file, embedding_file, w2v_model_file)
+# load raw data
+raw_df = pd.read_excel(root_path / 'data/200801至202008缺失類型(法規分段例).xlsx', sheet_name='法規')
+# # exclude law
+exclude_rule(raw_df, step1_file, legal_name_file, split_rule_kw_file)
+raw_df = pd.read_excel(step1_file)
+# # preprocessing
+data_cleansing(raw_df, output_file=step2_file, text_column=parsed_column)
+get_punctuation(step2_file, output_file=punc_file, text_column=parsed_column)
+create_word_dict(legal_name_file, word_file, word_dict_pkl_file)
+word_cut(step2_file, step3_file, punc_file, word_dict_pkl_file, parsed_column, ckip_path)
+word2vec_model(step3_file, embedding_file, w2v_model_file)
+evaluation(evaluation_file, rec_file, w2v_model_file, word_dict_pkl_file, ckip_path)
 
 # # recommendation
 # starttime = datetime.datetime.now()
@@ -52,4 +50,4 @@ w2v_model_file = output_path / 'w2v_var.pkl'
 # endtime = datetime.datetime.now()
 # print("搜尋推薦時間: ", endtime - starttime)
 # print(result)
-evaluation(evaluation_file, w2v_model_file, word_dict_pkl_file, ckip_path)
+
