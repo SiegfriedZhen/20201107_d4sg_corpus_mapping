@@ -2,6 +2,8 @@ import re
 from ckiptagger import WS
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from numpy import linalg as LA
+from numpy import dot
 import pickle
 import pandas as pd
 
@@ -34,12 +36,19 @@ def recommend_law(text, model_var_file, word_dict_file, ckip_path):
     if weight_sum != 0:
         text_vect /= weight_sum
     # binding all doc vector and add one input vector(seems extend would be better)
-    tmp_vect = [*tfidf_text_vect,text_vect]
-    new_cos_sim = cosine_similarity(tmp_vect, tmp_vect)
-    sim_score = np.sort(new_cos_sim[new_cos_sim.shape[0]-1])[::-1][1:11]
+    target_vec = text_vect
+    all_vector = np.array(tfidf_text_vect)
+    if LA.norm(target_vec) == 0:
+        sim = dot(target_vec, all_vector.T) / (1 * LA.norm(all_vector, axis=1))
+    else:
+        sim = dot(target_vec, all_vector.T) / (LA.norm(target_vec) * LA.norm(all_vector, axis=1))
 
-    tmp_top_10_law = df[['法規名稱', '條', '事實&改進建議']].iloc[np.argsort(new_cos_sim[new_cos_sim.shape[0]-1])[::-1][1:11]]
-    tmp_top_10_law['similarity_score'] = [round(score*100,1) for score in sim_score]
+    rank = np.sort(sim)[::-1]
+    nan_cnt = np.isnan(rank).sum()
+    sim_score = rank[nan_cnt:10 + nan_cnt]
+    tmp_top_10_law = df[['法規名稱', '條', '事實&改進建議']].iloc[np.argsort(sim)[::-1][nan_cnt:10 + nan_cnt]]
+    tmp_top_10_law['similarity_score'] = [round(score * 100, 1) for score in sim_score]
+    print('推薦結果如下：')
     return tmp_top_10_law
 
 

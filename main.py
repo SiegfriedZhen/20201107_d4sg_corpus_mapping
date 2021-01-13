@@ -26,7 +26,7 @@ step1_file = output_path / 'data_etl_step1_exclude_law.xlsx'  # output as excel 
 step2_file = output_path / 'data_etl_step2.csv'
 step3_file = output_path / 'data_etl_step3_noPuncDict.csv'
 w2v_model_file = output_path / 'w2v_var.pkl'
-rec_file = output_path / 'rec_元智cut.xlsx'
+rec_file = output_path / 'rec_元智cut_v3.xlsx'
 
 # load raw data
 raw_df = pd.read_excel(root_path / 'data/200801至202008缺失類型(法規分段例).xlsx', sheet_name='法規')
@@ -40,6 +40,10 @@ create_word_dict(legal_name_file, word_file, word_dict_pkl_file)
 word_cut(step2_file, step3_file, punc_file, word_dict_pkl_file, parsed_column, ckip_path)
 word2vec_model(step3_file, embedding_file, w2v_model_file)
 evaluation(evaluation_file, rec_file, w2v_model_file, word_dict_pkl_file, ckip_path)
+
+#測試部分
+result = recommend_law('測試文字', w2v_model_file, word_dict_pkl_file, ckip_path)
+print(result)
 
 # # recommendation
 # starttime = datetime.datetime.now()
