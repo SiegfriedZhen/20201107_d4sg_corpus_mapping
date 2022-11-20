@@ -5,7 +5,7 @@ from model_prediction import recommend_law, evaluation
 import datetime
 
 # word cut package data path and exec path
-root_path = Path('/Users/zoe/Documents/GitHub/20201107_d4sg_corpus_mapping')
+root_path = Path()
 ckip_path = root_path / 'data/ckip_model/data'
 embedding_file = root_path / 'data/wiki.zh.vector'
 evaluation_file = root_path / 'data/原始意見及定稿意見彙整表_v3.xlsx'
